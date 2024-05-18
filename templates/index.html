@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Datos de la Tabla</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .connected {
+            color: green;
+        }
+        .disconnected {
+            color: red;
+        }
+    </style>
+    <script>
+        let lastDate = null;
+        let statusElement;
+
+        window.onload = function() { // Cuando la página se cargue
+            statusElement = document.getElementById('connection-status');
+            checkConnection();
+            setInterval(checkConnection, 5000); // Cada 5 segundos
+        }
+        // JavaScript para refrescar la página cada 5 segundos
+        // setInterval(function() {
+        //     window.location.reload();
+        // }, 5000); // 5000 milisegundos = 5 segundos
+
+        function checkConnection() {
+            fetch('/last_date')
+                .then(response => response.json())
+                .then(newDate => {
+                    if (lastDate !== null && newDate.toString() === lastDate.toString()) { // Convertir a cadena y luego comparar
+                        setStatus('disconnected');
+                    } else {
+                        setStatus('connected');
+                        lastDate = newDate;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error al verificar la conexión:', error);
+                    setStatus('disconnected'); // Manejo de errores: si hay un error, establecer como desconectado
+                });
+        }
+
+
+
+        function setStatus(status) {
+            if (status === 'connected') {
+                statusElement.innerText = 'Conectado';
+                statusElement.className = 'connected';
+            } else {
+                statusElement.innerText = 'Desconectado';
+                statusElement.className = 'disconnected';
+            }
+        }
+
+        function actualizarTabla() {
+            fetch('/actualizar_datos')
+                .then(response => response.json())
+                .then(data => {
+                    const tabla = document.getElementById('tabla-datos');
+                    tabla.innerHTML = ''; // Limpiar la tabla antes de agregar nuevos datos
+
+                    // Iterar sobre los nuevos datos y agregar filas a la tabla
+                    data.forEach(row => {
+                        const newRow = tabla.insertRow();
+                        Object.values(row).forEach(value => {
+                            const newCell = newRow.insertCell();
+                            newCell.textContent = value;
+                        });
+                    });
+                })
+                .catch(error => console.error('Error al actualizar la tabla:', error));
+        }
+
+        // Llamar a la función para actualizar la tabla cada 5 segundos
+        setInterval(actualizarTabla, 2500);
+
+
+    </script>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="mb-4">Datos de la Tabla</h1>
+        <p id="connection-status" class="connected">Conectado</p>
+        <table id="tabla-datos" class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>CPU</th>
+                    <th>Núcleos</th>
+                    <th>Memoria</th>
+                    <th>Memoria Total</th>
+                    <th>Disco</th>
+                    <th>Disco Total</th>
+                    <th>Red Enviada</th>
+                    <th>Red Recibida</th>
+                    <th>Dirección IP</th>
+                    <th>Dirección MAC</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in users %}
+                <tr>
+                    <td>{{ row[0] }}</td>
+                    <td>{{ row[1] }}</td>
+                    <td>{{ row[2] }}</td>
+                    <td>{{ row[3] }}</td>
+                    <td>{{ row[4] }}</td>
+                    <td>{{ row[5] }}</td>
+                    <td>{{ row[6] }}</td>
+                    <td>{{ row[7] }}</td>
+                    <td>{{ row[8] }}</td>
+                    <td>{{ row[9] }}</td>
+                    <td>{{ row[10] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>
